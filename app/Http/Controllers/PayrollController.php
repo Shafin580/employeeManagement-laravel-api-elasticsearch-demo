@@ -50,9 +50,9 @@ class PayrollController extends Controller
         $medicalCost = $request->medical_cost;
         $salary = Employee::select('salary')->where('id', $empId)->first();
         $salary = $salary->salary;
-        $grossPay = $salary + $performanceBonus + $bonus + $tranportationCost + $medicalCost;
+        $grossPay = $salary + ($performanceBonus*$salary)/3 + $bonus + $tranportationCost + $medicalCost;
         
-        Payroll::create([
+        $payrollCreate= Payroll::create([
             'emp_id' => $empId,
             'performance_bonus' => $performanceBonus,
             'bonus' => $bonus,
@@ -60,6 +60,9 @@ class PayrollController extends Controller
             'medical_cost' => $medicalCost,
             'gross_pay' => $grossPay,
         ]);
+        if($payrollCreate){
+           Employee::find($empId)->touch();
+        }
 
         return response()->json([
             'message' => 'Data inserted Successfully!'

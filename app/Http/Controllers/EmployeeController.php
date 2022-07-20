@@ -14,42 +14,87 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        $employees = Employee::with('job', 'employeeDetail', 'payroll', 'job.department')->get();
-        //dd($employees);
-        $data = [];
-        foreach($employees as $employee){
-            $payrolls = $employee->payroll;
-            $payrollData = [];
-            //dd($employee->employeeDetail->address);
+        // $employees = Employee::with('job', 'employeeDetail', 'payroll', 'job.department')->get();
+        // //dd($employees);
+        // $data = [];
+        // foreach($employees as $employee){
+        //     $payrolls = $employee->payroll;
+        //     $payrollData = [];
+        //     //dd($employee->employeeDetail->address);
 
-            foreach($payrolls as $payroll){
+        //     foreach($payrolls as $payroll){
+        //         array_push($payrollData, [
+        //             'performanceBonus' => $payroll->performance_bonus,
+        //             'bonus' => $payroll->bonus,
+        //             'transportationCost' => $payroll->transportation_cost,
+        //             'medicalCost' => $payroll->medical_cost,
+        //             'grossPay' => $payroll->gross_pay,
+        //             'date' => $payroll->date,
+        //         ]);
+        //     }
+
+        //     array_push($data, [
+        //         'id' => $employee->id,
+        //         'name' => $employee->name,
+        //         'email' => $employee->email,
+        //         'phoneNo' => $employee->phone_no,
+        //         'job' => $employee->job->name,
+        //         'department' => $employee->job->department->name,
+        //         'address' => $employee->employeeDetail==null ? "" : $employee->employeeDetail->address,
+        //         'gender' => $employee->employeeDetail==null ? "" : $employee->employeeDetail->gender,
+        //         'martialStatus' => $employee->employeeDetail==null ? "" : $employee->employeeDetail->martial_status,
+        //         'religion' => $employee->employeeDetail==null ? "" : $employee->employeeDetail->religion,
+        //         'image' => $employee->employeeDetail==null ? "" : $employee->employeeDetail->image_path,
+        //         'payrolls' => $payrollData,
+        //     ]);
+        // }
+
+        // return response()->json([
+        //     'data' => $data,
+        // ]);
+
+        $searchQuery = [
+            'bool' => [
+                'must' => [
+                    'match_all' => (object)[],
+                ],
+            ],
+        ];
+        $getSearchResults = Employee::searchQuery($searchQuery)
+            ->size(100)->raw();
+        $results = $getSearchResults['hits']['hits'];
+        $data = [];
+        foreach ($results as $result) {
+            $payrollData = [];
+            foreach ($result['_source']['employeePayrolls'] as $payResult) {
                 array_push($payrollData, [
-                    'performanceBonus' => $payroll->performance_bonus,
-                    'bonus' => $payroll->bonus,
-                    'transportationCost' => $payroll->transportation_cost,
-                    'medicalCost' => $payroll->medical_cost,
-                    'grossPay' => $payroll->gross_pay,
-                    'date' => $payroll->date,
+                    'performanceBonus' => $payResult['performanceBonus'],
+                    'bonus' => $payResult['bonus'],
+                    'transportationCost' => $payResult['transportationCost'],
+                    'medicalCost' => $payResult['medicalCost'],
+                    'grossPay' => $payResult['grossPay'],
+                    'date' => $payResult['date'],
                 ]);
             }
 
             array_push($data, [
-                'id' => $employee->id,
-                'name' => $employee->name,
-                'email' => $employee->email,
-                'phoneNo' => $employee->phone_no,
-                'job' => $employee->job->name,
-                'department' => $employee->job->department->name,
-                'address' => $employee->employeeDetail==null ? "" : $employee->employeeDetail->address,
-                'gender' => $employee->employeeDetail==null ? "" : $employee->employeeDetail->gender,
-                'martialStatus' => $employee->employeeDetail==null ? "" : $employee->employeeDetail->martial_status,
-                'religion' => $employee->employeeDetail==null ? "" : $employee->employeeDetail->religion,
-                'image' => $employee->employeeDetail==null ? "" : $employee->employeeDetail->image_path,
+                'id' => $result['_source']['employeeId'],
+                'name' => $result['_source']['employeeName'],
+                'email' => $result['_source']['employeeEmail'],
+                'phoneNo' => $result['_source']['employeePhoneNo'],
+                'job' => $result['_source']['employeeJob'],
+                'salary' => $result['_source']['employeeSalary'],
+                'department' => $result['_source']['employeeDepartment'],
+                'address' => $result['_source']['employeeAddress'],
+                'gender' => $result['_source']['employeeGender'],
+                'martialStatus' => $result['_source']['employeeMartialStatus'],
+                'religion' => $result['_source']['employeeReligion'],
+                'image' => $result['_source']['employeeImage'],
                 'payrolls' => $payrollData,
             ]);
         }
-
         return response()->json([
+            'status_code' => 200,
             'data' => $data,
         ]);
     }
@@ -76,7 +121,7 @@ class EmployeeController extends Controller
         $jobId = $request->job_id;
         $salary = $request->salary;
 
-        Employee::create([
+        $employeeCreate = Employee::create([
             'name' => $name,
             'email' => $email,
             'phone_no' => $phoneNo,
@@ -143,5 +188,211 @@ class EmployeeController extends Controller
     public function destroy(Employee $employee)
     {
         //
+    }
+
+    public function test(Request $request)
+    {
+
+        $department = "";
+        $name = "";
+        $job = "";
+        $gender = "";
+        $martialStatus = "";
+        $religion = "";
+        $performanceBonus = 0;
+        $bonus = 0;
+        $transportationCost = 0;
+        $date = "";
+        $genderQuery = [];
+        $martialStatusQuery = [];
+        $religionQuery = [];
+        $performanceBonusQuery = [];
+        $bonusQuery = [];
+        $transportationCostQuery = [];
+        $dateQuery = [];
+        $departmentQuery = [];
+        $nameQuery = [];
+        $jobQuery = [];
+
+        if (isset($request->department)) {
+            $department = $request->department;
+            $departmentQuery = [
+                'match' => [
+                    'employeeDepartment' => $department,
+                ],
+            ];
+        }
+
+        if (isset($request->name)) {
+            $name = $request->name;
+            $nameQuery = [
+                "match" => [
+                    'employeeName' => $name,
+                ],
+            ];
+        }
+
+        if (isset($request->job)) {
+            $job = $request->job;
+            $jobQuery = ["match" => [
+                'employeeJob' => $job,
+            ],];
+        }
+
+        if (isset($request->gender)) {
+            $gender = $request->gender;
+            $genderQuery = ["match" => [
+                'employeeGender' => $gender,
+            ],];
+        }
+
+        if (isset($request->martialStatus)) {
+            $martialStatus = $request->martialStatus;
+            $martialStatusQuery = ["match" => [
+                'employeeMartialStatus' => $martialStatus,
+            ],];
+        }
+
+        if (isset($request->religion)) {
+            $religion = $request->religion;
+            $religionQuery = ["match" => [
+                'employeeReligion' => $religion,
+            ],];
+        }
+
+        if (isset($request->performanceBonus)) {
+            $performanceBonus = $request->performanceBonus;
+            $performanceBonusQuery = ["range" => [
+                'employeePayRolls.performanceBonus' => [
+                    'lte' => $performanceBonus,
+                ],
+            ],];
+        }
+
+        if (isset($request->bonus)) {
+            $bonus = $request->bonus;
+            $bonusQuery = [
+                "range" => [
+                    "employeePayrolls.bonus" => [
+                        'gte' => $bonus,
+                    ],
+                ],
+            ];
+        }
+
+        //dd($department);
+
+        $searchQuery = [
+            'bool' => [
+                'must' => $departmentQuery,
+                "filter" => [
+                    "bool" => [
+                        "must" => $nameQuery,
+                        "filter" => [
+                            "bool" => [
+                                "must" => $jobQuery,
+                                "filter" => [
+                                    "bool" => [
+                                        "must" => $genderQuery,
+                                        "filter" => [
+                                            "bool" => [
+                                                "must" => $martialStatusQuery,
+                                                "filter" => [
+                                                    "bool" => [
+                                                        "must" => $religionQuery,
+                                                        "filter" => [
+                                                            "bool" => [
+                                                                "must" => $bonusQuery
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+
+                /////
+                // 'must' => [
+                //     "match" => [
+                //         'employeeName' => 'shafin',
+                //     ],
+                // ],
+                // "filter" => [
+                //     "bool" => [
+                //         "must" => [
+                //             "range" => [
+                //                 "employeeSalary" => [
+                //                     'gte' => 50000,
+                //                     'lte' => 90000
+                //                 ]
+                //             ]
+                //         ],
+                //     ],
+                // ],
+                //////
+                // "filter" => [
+                //     "bool" => [
+                //         "must" => [
+                //             "range" => [
+                //                 "employeeSalary" => [
+                //                     'gte' => 20000,
+                //                     'lte' => 90000
+                //                 ]
+                //             ]
+                //         ]
+                //     ]
+                // ],
+                // "filter" => [
+                //     "bool" => [
+                //         "must" => [
+                //             "match" => [
+                //                 "employeeDepartment" =>"HRM"
+                //             ]
+                //         ]
+                //     ]
+                // ]
+                //////
+                // "filter" => [
+                //     "bool" => [
+                //         "must" => [
+                //             "range" => [
+                //                 "employeePayrolls.bonus" => [
+                //                     'gte' => 7000,
+                //                 ],
+                //             ],
+                //         ],
+                //     ],
+                // ],
+            ]
+        ];
+        //$getSearchResults = Employee::SearchQuery($searchQuery)->size(100)->raw();
+
+        //////
+        // $multiMatchValue = "";
+
+        // if($request->multiMatchValue){
+        //     $multiMatchValue = $request->multiMatchValue;
+        // }
+
+        // $multiMatchQuery = [
+        //     "bool" => [
+        //     "must" => [
+        //         "multi_match" => [
+        //             "query" => $multiMatchValue,
+        //             "fields" => ["employeeName", "employeeEmail", "employeePhoneNo", "employeeJob", "employeeAddress"],
+        //         ],
+        //     ],
+        // ],];
+
+        // $multiMatchResult = Employee::searchQuery($multiMatchQuery)->size(100)->raw();
+        // dd($multiMatchResult['hits']['hits']);
+
+        //dd($getSearchResults['hits']['hits']);
+
     }
 }

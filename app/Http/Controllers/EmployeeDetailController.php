@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
 use App\Models\EmployeeDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -50,7 +51,7 @@ class EmployeeDetailController extends Controller
             $image = $filename;
         }
 
-        EmployeeDetail::create([
+        $employeeDetailCreate = EmployeeDetail::create([
             'emp_id' => $empId,
             'address' => $address,
             'gender' => $gender,
@@ -58,6 +59,14 @@ class EmployeeDetailController extends Controller
             'religion' => $religion,
             'image_path' => $image,
         ]);
+
+        if($employeeDetailCreate){
+            Employee::find($empId)->touch();
+         }
+ 
+         return response()->json([
+             'message' => 'Data inserted Successfully!'
+         ]);
 
         return response()->json([
             'message' => 'Data inserted Successfully!'

@@ -37,6 +37,7 @@ Route::prefix('/department')->group(function () {
 
 Route::prefix('/employee')->group(function () {
     Route::get('/', [EmployeeController::class, 'index']);
+    Route::post('/elastic', [EmployeeController::class, 'test']);
     Route::post('/create', [EmployeeController::class, 'create']);
 });
 
