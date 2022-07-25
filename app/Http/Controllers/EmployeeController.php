@@ -203,6 +203,7 @@ class EmployeeController extends Controller
         $bonus = 0;
         $transportationCost = 0;
         $date = "";
+        $prefixValue = "";
         $genderQuery = [];
         $martialStatusQuery = [];
         $religionQuery = [];
@@ -213,6 +214,8 @@ class EmployeeController extends Controller
         $departmentQuery = [];
         $nameQuery = [];
         $jobQuery = [];
+
+        //dd(count($request->request));
 
         if (isset($request->department)) {
             $department = $request->department;
@@ -278,6 +281,10 @@ class EmployeeController extends Controller
                     ],
                 ],
             ];
+        }
+
+        if(isset($request->prefixValue)){
+            $prefixValue = $request->prefixValue;
         }
 
         //dd($department);
@@ -393,6 +400,96 @@ class EmployeeController extends Controller
         // dd($multiMatchResult['hits']['hits']);
 
         //dd($getSearchResults['hits']['hits']);
+
+        //////
+
+        // $prefixQuery = [
+        //     'bool' => [
+        //         'must' => [
+        //             'prefix' => [
+        //                 'employeeDepartment' => [
+        //                     'value' => $prefixValue,
+        //                 ],
+        //             ],
+        //         ],
+        //     ],
+        // ];
+
+        // $prefixResult = Employee::searchQuery($prefixQuery)->size(100)->raw();
+        // dd($prefixResult['hits']['hits']);
+
+        // $filteredQuery = [
+        //     'bool' => [
+        //         'must' => [
+        //             'filtered' => [
+        //                 'bool' => [
+        //                     'must' => [
+        //                         'query' => [
+        //                             'term' => [
+        //                                 'employeeDepartment' => 'software',
+        //                             ],
+        //                         ],
+        //                         'filter' => [
+        //                             'bool' => [
+        //                                 'must' => [
+        //                                     'range' => [
+        //                                         'employeeSalary' => [
+        //                                             'gte' => 60000,
+        //                                         ],
+        //                                     ],
+        //                                 ],
+        //                             ],
+        //                         ],
+        //                     ],
+        //                 ],
+        //             ],
+        //         ],
+        //     ],
+        // ];
+
+        // $filteredResult = Employee::searchQuery($filteredQuery)->size(100)->raw();
+        // dd($filteredResult['hits']['hits']);
+
+        //////
+
+        // $aggsQuery = [
+            
+                    
+        //                 'max_salary' => [
+        //                     'max' => [
+        //                         'field' => 'employeeSalary',
+        //                     ],
+        //                 ],
+                    
+                
+        // ];
+
+        // $aggsResult = Employee::searchQuery($searchQuery)->aggregateRaw($aggsQuery)->size(100)->raw();
+        // dd($aggsResult['aggregations']);
+
+        ///////
+
+        // $fuzzyQuery = [
+        //     'bool' => [
+        //         'must' => [
+        //             'fuzzy' => [
+        //                 'employeeDepartment' => [
+        //                     'value' => 'marteking',
+        //                     'fuzziness' => 'AUTO',
+        //                     "max_expansions" => 50,
+        //                     "prefix_length" => 0,
+        //                     "transpositions" => true,
+        //                     "rewrite" => "constant_score",
+        //                 ],
+        //             ],
+        //         ],
+        //     ],
+        // ];
+
+        // $fuzzyResult = Employee::searchQuery($fuzzyQuery)->size(100)->raw();
+        // dd($fuzzyResult['hits']['hits']);
+        
+        //////
 
     }
 }
